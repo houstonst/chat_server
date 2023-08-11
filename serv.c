@@ -9,7 +9,7 @@
 #define SA struct sockaddr
 
 // client interaction function
-int read_from_client(int connfd) {
+int read_from_client(int connfd, FILE *f) {
     char buff[B_SIZE];
 
     while(1) {
@@ -17,6 +17,7 @@ int read_from_client(int connfd) {
         if(strncmp(buff, "HALT\n", B_SIZE) == 0) return(1);
         if(strncmp(buff, "EXIT\n", B_SIZE) == 0) return(0);
         printf("%s", buff);
+        fprintf(f, "%s", buff);
     }
 }
 
@@ -54,6 +55,8 @@ int main() {
         printf("Server running...\n");
     }
 
+    FILE *f = fopen("serv_log.txt", "w");
+
     while(1) {
         // accept client data
         unsigned int len = sizeof(cli);
@@ -64,14 +67,17 @@ int main() {
             return(1);
         }
 
+        // log client data
+
         // loop client message functionality, end main() loop if client sent shutdown
-        if (read_from_client(connfd) != 0) {
+        if (read_from_client(connfd, f) != 0) {
             close(sockfd);
             return(0);
         }
     }
 
-    // close client.log, the socket, and end the program
+    // close log file, the socket, and end the program
+    fclose(f);
     close(sockfd);
     return(0);
 }
